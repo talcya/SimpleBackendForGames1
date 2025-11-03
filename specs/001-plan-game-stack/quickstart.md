@@ -47,7 +47,7 @@ pnpm install
    ```
    Contract tests align with `specs/001-plan-game-stack/contracts/openapi.yaml`.
 
-## Frontend (Nuxt 3 + Pinia + TailwindCSS)
+## Frontend (Nuxt 4 + Pinia + TailwindCSS)
 
 1. **Install packages**
    ```powershell

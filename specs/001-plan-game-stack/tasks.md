@@ -20,7 +20,7 @@
 - [ ] T001 Configure workspace package management in `package.json` to register `backend`, `frontend`, and `shared/contracts` packages.
 - [ ] T002 Define pnpm workspaces in `pnpm-workspace.yaml` at repository root.
 - [ ] T003 [P] Scaffold backend project metadata and scripts in `backend/package.json` including dev, build, and test commands.
-- [ ] T004 [P] Initialize Nuxt 3 project metadata and scripts in `frontend/package.json` with lint and test targets.
+- [ ] T004 [P] Initialize Nuxt 4 project metadata and scripts in `frontend/package.json` with lint and test targets.
 - [ ] T005 [P] Create shared contracts package manifest and build scripts in `shared/contracts/package.json` for OpenAPI code generation.
 - [X] T001 Configure workspace package management in `package.json` to register `backend`, `frontend`, and `shared/contracts` packages.
 - [X] T002 Define pnpm workspaces in `pnpm-workspace.yaml` at repository root.
@@ -40,7 +40,7 @@
 - [ ] T009 [P] Establish unified error and logging middleware in `backend/src/middleware/error-handler.ts` with winston integration.
 - [ ] T010 [P] Configure OpenAPI type generation pipeline in `shared/contracts/openapi-codegen.config.ts` consuming `specs/001-plan-game-stack/contracts/openapi.yaml`.
 - [ ] T011 [P] Set up Jest and Supertest harness in `backend/jest.config.ts` and seed `backend/tests/setup/global.ts`.
-- [ ] T012 Prepare Nuxt 3 base layout, Tailwind integration, and global providers in `frontend/app/app.vue` and `frontend/tailwind.config.ts`.
+- [ ] T012 Prepare Nuxt 4 base layout, Tailwind integration, and global providers in `frontend/app/app.vue` and `frontend/tailwind.config.ts`.
 - [ ] T013 [P] Configure ESLint root settings covering backend and frontend in `.eslintrc.cjs` with shared rulesets.
 - [ ] T014 [P] Define strict TypeScript compiler options in `backend/tsconfig.json`, `frontend/tsconfig.json`, and `shared/contracts/tsconfig.json` with `noEmitOnError` enabled.
 - [ ] T015 [P] Wire project-wide build validation scripts in root `package.json` to run `pnpm build` for backend and frontend before deploys.

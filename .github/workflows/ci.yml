@@ -10,6 +10,16 @@ jobs:
   backend:
     name: backend
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval \"db.adminCommand('ping')\" || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -26,4 +36,6 @@ jobs:
       - name: Lint
         run: pnpm -C backend exec eslint "backend/src/**/*.{ts,js}" || true
       - name: Run tests
+        env:
+          MONGO_URI: mongodb://localhost:27017
         run: pnpm -C backend exec jest --config backend/jest.config.ts --runInBand

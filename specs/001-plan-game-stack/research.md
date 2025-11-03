@@ -5,7 +5,7 @@
 - Research best practices for Express.js REST APIs with JWT auth and Mongoose persistence in a live-ops game context.
 - Research best practices for Socket.IO real-time notification channels shared by web and mobile clients.
 - Research best practices for MongoDB data modelling to support leaderboards, inventories, violations, and analytics aggregation.
-- Research best practices for Nuxt 3 with Pinia and TailwindCSS for a live-ops dashboard and player-facing portal.
+- Research best practices for Nuxt 4 with Pinia and TailwindCSS for a live-ops dashboard and player-facing portal.
 - Research integration patterns for delivering notifications and leaderboard updates in near real-time across backend and frontend.
 - Research integration patterns for analytics-driven daily challenge generation tied to scheduled jobs.
 - Research integration patterns for offline-capable clients synchronizing queued events once connectivity is restored.
@@ -24,8 +24,8 @@
 - **Rationale**: Players, leaderboards, offers, and analytics require predictable lookups; compound indexes on (type, timestamp) or (playerId, metric) keep queries within latency targets. Capped collections for event logs prevent unbounded growth while preserving recent activity for analytics.
 - **Alternatives considered**: Relational schema (slower iteration and requires migrations); Redis primary store (fast but complicates persistence guarantees for audits).
 
-### Decision: Structure Nuxt 3 frontend as dual-mode (player entry + operator dashboard) with shared design system
-- **Rationale**: Nuxt 3 supports hybrid static/SSR rendering and provides file-based routing for quick setup tutorials. Pinia stores centralize auth/profile state; Tailwind ensures rapid UI scaffolding consistent with copy-and-play guidance.
+### Decision: Structure Nuxt 4 frontend as dual-mode (player entry + operator dashboard) with shared design system
+- **Rationale**: Nuxt 4 supports hybrid static/SSR rendering and provides file-based routing for quick setup tutorials. Pinia stores centralize auth/profile state; Tailwind ensures rapid UI scaffolding consistent with copy-and-play guidance.
 - **Alternatives considered**: React + Next.js (viable but diverges from requested stack); Vue 2 + Vuex (legacy).
 
 ### Decision: Drive notification and leaderboard integrations via shared TypeScript contract package generated from OpenAPI spec

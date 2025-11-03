@@ -44,7 +44,13 @@ export async function createServer() {
   // Optionally start background event processor (useful for local/dev).
   // Enable by setting ENABLE_EVENT_PROCESSOR=true in env.
   if (process.env.ENABLE_EVENT_PROCESSOR === 'true') {
-    startEventProcessor();
+    // Allow overriding the poll interval for faster testing via PROCESSOR_POLL_MS (ms)
+    const envMs = process.env.PROCESSOR_POLL_MS ? Number(process.env.PROCESSOR_POLL_MS) : undefined;
+    if (envMs && !Number.isNaN(envMs) && envMs > 0) {
+      startEventProcessor(envMs);
+    } else {
+      startEventProcessor();
+    }
   }
 
   // Ensure any background processors are stopped and MongoDB is disconnected when the server closes.

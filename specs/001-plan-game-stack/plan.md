@@ -7,7 +7,7 @@
 
 ## Summary
 
-Deliver a Node.js 18 Express backend backed by MongoDB with Socket.IO real-time channels and a Nuxt 3 frontend. Contracts will be defined via OpenAPI and shared as TypeScript types, supporting unified player progress, live operations tooling, analytics-driven daily challenges, and offline event reconciliation.
+Deliver a Node.js 18 Express backend backed by MongoDB with Socket.IO real-time channels and a Nuxt 4 frontend. Contracts will be defined via OpenAPI and shared as TypeScript types, supporting unified player progress, live operations tooling, analytics-driven daily challenges, and offline event reconciliation.
 
 ## Technical Context
 
@@ -17,8 +17,8 @@ Deliver a Node.js 18 Express backend backed by MongoDB with Socket.IO real-time 
   the iteration process.
 -->
 
-**Language/Version**: Node.js 18 LTS (backend), TypeScript (shared typing), Nuxt 3 (Vue 3) for frontend  
-**Primary Dependencies**: Express.js for REST APIs, Socket.IO for realtime signaling, MongoDB (Mongoose ODM), Nuxt 3 + Pinia + TailwindCSS for frontend state/UI  
+**Language/Version**: Node.js 18 LTS (backend), TypeScript (shared typing), Nuxt 4 (Vue 3) for frontend  
+**Primary Dependencies**: Express.js for REST APIs, Socket.IO for realtime signaling, MongoDB (Mongoose ODM), Nuxt 4 + Pinia + TailwindCSS for frontend state/UI  
 **Storage**: MongoDB Atlas-compatible cluster with replica set (development may use local single node)  
 **Testing**: Jest (backend unit/integration), Supertest for API contracts, Vitest + Playwright for frontend flows  
 **Target Platform**: Backend deployed to container-friendly Linux environment; Frontend targets modern evergreen browsers (desktop/mobile)  
@@ -71,7 +71,7 @@ backend/
   └── contract/
 
 frontend/
-├── app/ (Nuxt 3 convention for pages/layouts)
+├── app/ (Nuxt 4 convention for pages/layouts)
 ├── components/
 ├── composables/
 ├── stores/

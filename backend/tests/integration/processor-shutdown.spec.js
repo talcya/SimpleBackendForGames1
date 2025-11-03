@@ -16,7 +16,8 @@ describe('event processor graceful shutdown', () => {
     }
 
     const child = spawn(process.execPath, ['dist/server.js'], {
-      env: { ...process.env, ENABLE_EVENT_PROCESSOR: 'true' },
+      // run processor with a short poll interval for fast test turn-around
+      env: { ...process.env, ENABLE_EVENT_PROCESSOR: 'true', PROCESSOR_POLL_MS: '500' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
@@ -26,8 +27,27 @@ describe('event processor graceful shutdown', () => {
       const str = chunk.toString();
       if (str.includes('Backend listening on')) {
         started = true;
-        // allow server to fully initialize then send SIGINT
-        setTimeout(() => child.kill('SIGINT'), 500);
+        // allow server to fully initialize then insert a rule+event into MongoDB so processor picks it up,
+        // then send SIGINT after a short delay to exercise graceful shutdown while processor ran.
+        (async () => {
+          const { MongoClient } = require('mongodb');
+          const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017';
+          const client = new MongoClient(mongoUri, { connectTimeoutMS: 5000 });
+          try {
+            await client.connect();
+            const db = client.db('gameDB');
+            const ruleName = `test-rule-${Date.now()}`;
+            await db.collection('rules').insertOne({ name: ruleName, action: 'flag', threshold: 1, windowSeconds: 60, active: true, createdAt: new Date(), updatedAt: new Date() });
+            await db.collection('eventlogs').insertOne({ eventType: ruleName, payload: null, evaluated: false, matchedRuleIds: [], createdAt: new Date() });
+          } catch (err) {
+            // console.error('processor test setup error', err);
+          } finally {
+            try { await client.close(); } catch (e) {}
+          }
+
+          // give the processor a short moment to pick up the event, then send SIGINT
+          setTimeout(() => child.kill('SIGINT'), 800);
+        })();
       }
     };
 
