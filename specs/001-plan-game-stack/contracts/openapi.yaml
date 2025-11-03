@@ -1,0 +1,562 @@
+openapi: 3.1.0
+info:
+  title: Minimal Cross-Platform Game Backend API
+  version: 0.1.0
+  description: REST contracts for authentication, leaderboards, store, events, notifications, groups, offers, analytics, and daily challenges.
+servers:
+  - url: https://api.example.com/v1
+security:
+  - bearerAuth: []
+paths:
+  /auth/signup:
+    post:
+      summary: Create a new player with email/password credentials
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Player created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email already in use
+  /auth/login:
+    post:
+      summary: Authenticate via email/password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+  /auth/google:
+    get:
+      summary: Begin Google OAuth flow
+      tags: [Auth]
+      responses:
+        '302':
+          description: Redirect to Google
+  /players/me:
+    get:
+      summary: Retrieve authenticated player profile
+      tags: [Players]
+      responses:
+        '200':
+          description: Player profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+  /players/{playerId}/high-score:
+    put:
+      summary: Update high score if greater than stored value
+      tags: [Players]
+      parameters:
+        - $ref: '#/components/parameters/PlayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HighScoreUpdate'
+      responses:
+        '200':
+          description: Updated player
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '409':
+          description: Score rejected because it does not beat current high score
+  /leaderboards/{scope}:
+    get:
+      summary: Fetch leaderboard entries for selected scope
+      tags: [Leaderboards]
+      parameters:
+        - $ref: '#/components/parameters/LeaderboardScope'
+        - $ref: '#/components/parameters/Region'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        '200':
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+  /events:
+    post:
+      summary: Submit gameplay event or snapshot
+      tags: [Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventSubmission'
+      responses:
+        '202':
+          description: Event accepted for processing
+        '422':
+          description: Payload invalid or exceeds limits
+  /notifications:
+    post:
+      summary: Dispatch notification to audience
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationCreate'
+      responses:
+        '202':
+          description: Notification scheduled
+    get:
+      summary: List notifications for current player
+      tags: [Notifications]
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Player notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+  /offers:
+    post:
+      summary: Create or schedule an offer
+      tags: [Offers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferCreate'
+      responses:
+        '201':
+          description: Offer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+    get:
+      summary: List active offers for player
+      tags: [Offers]
+      responses:
+        '200':
+          description: Active offers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  offers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Offer'
+  /groups:
+    post:
+      summary: Create player group
+      tags: [Groups]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+  /analytics:
+    get:
+      summary: Query aggregated analytics metrics
+      tags: [Analytics]
+      parameters:
+        - name: metric
+          in: query
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly]
+            default: daily
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+      responses:
+        '200':
+          description: Analytics series
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+  /challenges/daily:
+    get:
+      summary: Fetch current daily challenge
+      tags: [Challenges]
+      responses:
+        '200':
+          description: Active challenge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyChallenge'
+        '204':
+          description: No challenge available
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    PlayerId:
+      name: playerId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-fA-F0-9]{24}$'
+    LeaderboardScope:
+      name: scope
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [global, local, friends]
+    Region:
+      name: region
+      in: query
+      schema:
+        type: string
+        minLength: 2
+        maxLength: 2
+        description: ISO country code required for local leaderboards
+  schemas:
+    SignupRequest:
+      type: object
+      required: [displayName, email, password]
+      properties:
+        displayName:
+          type: string
+          minLength: 3
+          maxLength: 32
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 10
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        player:
+          $ref: '#/components/schemas/PlayerProfile'
+    PlayerProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+        highScore:
+          type: integer
+        inventory:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryItem'
+        friends:
+          type: array
+          items:
+            type: string
+        groups:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, suspended, banned]
+    InventoryItem:
+      type: object
+      properties:
+        itemId:
+          type: string
+        name:
+          type: string
+        acquiredAt:
+          type: string
+          format: date-time
+        acquisitionMethod:
+          type: string
+          enum: [won, purchased, giveaway]
+    HighScoreUpdate:
+      type: object
+      required: [score]
+      properties:
+        score:
+          type: integer
+        deviceFingerprint:
+          type: string
+        region:
+          type: string
+          minLength: 2
+          maxLength: 2
+    LeaderboardResponse:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+    LeaderboardEntry:
+      type: object
+      properties:
+        playerId:
+          type: string
+        displayName:
+          type: string
+        score:
+          type: integer
+        rank:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+    EventSubmission:
+      type: object
+      required: [type, gameMode, data]
+      properties:
+        type:
+          type: string
+          enum: [snapshot, activity, event]
+        gameMode:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+        idempotencyKey:
+          type: string
+    NotificationCreate:
+      type: object
+      required: [title, body, audienceType]
+      properties:
+        title:
+          type: string
+          maxLength: 80
+        body:
+          type: string
+          maxLength: 280
+        audienceType:
+          type: string
+          enum: [all, group, friends, player]
+        audienceRef:
+          type: string
+          nullable: true
+        payload:
+          type: object
+          additionalProperties: true
+        sendAt:
+          type: string
+          format: date-time
+          nullable: true
+    Notification:
+      allOf:
+        - $ref: '#/components/schemas/NotificationCreate'
+        - type: object
+          properties:
+            id:
+              type: string
+            status:
+              type: string
+              enum: [queued, sent, delivered, failed, read]
+            createdAt:
+              type: string
+              format: date-time
+    OfferCreate:
+      type: object
+      required: [kind, startAt, endAt, audience]
+      properties:
+        kind:
+          type: string
+          enum: [offer, discount, giveaway, daily-challenge]
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        audience:
+          $ref: '#/components/schemas/Audience'
+        reward:
+          $ref: '#/components/schemas/Reward'
+        redemptionLimit:
+          type: integer
+          minimum: 1
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Condition'
+    Offer:
+      allOf:
+        - $ref: '#/components/schemas/OfferCreate'
+        - type: object
+          properties:
+            id:
+              type: string
+            state:
+              type: string
+              enum: [draft, scheduled, active, expired, archived]
+    Audience:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [all, group, playerIds, friends]
+        groupId:
+          type: string
+          nullable: true
+        playerIds:
+          type: array
+          items:
+            type: string
+          nullable: true
+    Reward:
+      type: object
+      properties:
+        itemId:
+          type: string
+        currencyAmount:
+          type: integer
+          nullable: true
+    Condition:
+      type: object
+      properties:
+        metric:
+          type: string
+        operator:
+          type: string
+          enum: [gte, gt, lte, lt, eq]
+        value:
+          type: number
+    GroupCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        autoAssignmentRule:
+          type: string
+          nullable: true
+    Group:
+      allOf:
+        - $ref: '#/components/schemas/GroupCreate'
+        - type: object
+          properties:
+            id:
+              type: string
+            slug:
+              type: string
+            memberCount:
+              type: integer
+    AnalyticsResponse:
+      type: object
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsMetric'
+    AnalyticsMetric:
+      type: object
+      properties:
+        metric:
+          type: string
+        period:
+          type: string
+        date:
+          type: string
+          format: date
+        value:
+          type: number
+        sampleCount:
+          type: integer
+        details:
+          type: object
+          additionalProperties: true
+    DailyChallenge:
+      type: object
+      properties:
+        id:
+          type: string
+        issuedForDate:
+          type: string
+          format: date
+        description:
+          type: string
+        reward:
+          $ref: '#/components/schemas/Reward'
+        thresholdMetric:
+          type: string
+        thresholdValue:
+          type: number
+        audience:
+          $ref: '#/components/schemas/Audience'

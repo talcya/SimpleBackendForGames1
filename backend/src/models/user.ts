@@ -1,0 +1,33 @@
+import mongoose, { Schema, Document } from 'mongoose';
+import { randomBytes } from 'node:crypto';
+
+export interface IUser extends Document {
+  email?: string;
+  googleId?: string | null;
+  displayName: string;
+  avatarUrl?: string;
+  passwordHash?: string | null;
+  jwtVersion: number;
+  refreshTokenId?: string;
+  highScore: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const UserSchema = new Schema<IUser>(
+  {
+    email: { type: String, index: true, sparse: true },
+    googleId: { type: String, index: true, sparse: true },
+    displayName: { type: String, required: true, unique: true },
+    avatarUrl: { type: String },
+    passwordHash: { type: String, default: null },
+    jwtVersion: { type: Number, default: 0 },
+    refreshTokenId: { type: String, default: () => randomBytes(16).toString('hex') },
+    highScore: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+export const UserModel = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+
+export default UserModel;

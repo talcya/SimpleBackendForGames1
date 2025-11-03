@@ -1,0 +1,17 @@
+{
+  "name": "simple-cross-platform-games",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared/contracts"
+  ],
+  "scripts": {
+    "bootstrap": "pnpm install",
+    "dev": "pnpm -w -C backend dev & pnpm -w -C frontend dev",
+    "build": "pnpm -w -C backend build && pnpm -w -C frontend build",
+    "lint": "echo \"No root lint configured\"",
+    "test": "pnpm -w -C backend test && pnpm -w -C frontend test"
+  }
+}

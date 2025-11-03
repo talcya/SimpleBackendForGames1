@@ -1,0 +1,12 @@
+{
+  "name": "@games/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo \"Generate contracts from OpenAPI (placeholder)\""
+  },
+  "devDependencies": {
+    "openapi-typescript-codegen": "^0.21.0",
+    "@types/node": "^20.5.1"
+  }
+}

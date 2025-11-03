@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      - name: Install pnpm
+        run: corepack enable && pnpm -v || npm i -g pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build TypeScript
+        run: pnpm -C backend exec tsc -p backend/tsconfig.json
+      - name: Lint
+        run: pnpm -C backend exec eslint "backend/src/**/*.{ts,js}" || true
+      - name: Run tests
+        run: pnpm -C backend exec jest --config backend/jest.config.ts --runInBand

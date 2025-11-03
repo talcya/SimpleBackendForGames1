@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { config, connectMongo } from './config/index';
 import { errorHandler } from './middleware/error-handler';
 import passport from './config/passport';
+import mongoose from 'mongoose';
 
 import authRoutes from './routes/auth.routes';
 import playersRoutes from './routes/players.routes';
@@ -41,13 +42,27 @@ export async function createServer() {
   typedApp.locals.io = io;
 
   // Optionally start background event processor (useful for local/dev).
-  // Enable by setting ENABLE_EVENT_PROCESSOR=true in env. It will be stopped when the server closes.
+  // Enable by setting ENABLE_EVENT_PROCESSOR=true in env.
   if (process.env.ENABLE_EVENT_PROCESSOR === 'true') {
     startEventProcessor();
-    server.on('close', () => {
-      stopEventProcessor();
-    });
   }
+
+  // Ensure any background processors are stopped and MongoDB is disconnected when the server closes.
+  server.on('close', () => {
+    if (process.env.ENABLE_EVENT_PROCESSOR === 'true') {
+      try {
+        stopEventProcessor();
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('Error stopping event processor during server close', e);
+      }
+    }
+
+    mongoose.disconnect().catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('Error disconnecting mongoose during server close', err);
+    });
+  });
 
   return { app, server, io };
 }
