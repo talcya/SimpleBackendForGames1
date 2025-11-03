@@ -9,7 +9,7 @@
     "test": "vitest"
   },
   "dependencies": {
-  "nuxt": "4.0.4",
+  "nuxt": "^4.2.0",
     "@pinia/nuxt": "^0.4.6",
     "pinia": "^2.1.6",
   "tailwindcss": "^4.1.16",
