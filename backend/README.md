@@ -34,3 +34,11 @@ This ensures tests and local runs exit cleanly.
 
 Notes
 - For tests, the test harness already ensures MongoDB disconnects and the server closes to avoid Jest hanging on open handles.
+
+Status
+
+- The TypeScript version was pinned to a parser-compatible release in this branch to avoid ESLint parser warnings during CI and local runs. If you'd like to use a newer TypeScript version instead, we can upgrade the `@typescript-eslint` packages and run an install to re-enable that path.
+
+CI behaviour
+
+- The CI workflow runs ESLint with `--max-warnings=0`, so lint warnings will fail the job. This helps catch issues early; if you'd prefer a non-failing lint step temporarily, revert the Lint step in `.github/workflows/ci.yml` to append `|| true`.
