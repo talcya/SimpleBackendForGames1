@@ -154,7 +154,6 @@ paths:
           description: Bad request
         '401':
           description: Unauthorized
-
   /guests:
     post:
       summary: Create a new guest session

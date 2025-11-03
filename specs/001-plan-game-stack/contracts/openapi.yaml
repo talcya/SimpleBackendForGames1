@@ -120,6 +120,100 @@ paths:
           description: Event accepted for processing
         '422':
           description: Payload invalid or exceeds limits
+
+  /player-scores:
+    post:
+      summary: Submit or upsert a player score (atomic)
+      tags: [Scores]
+      operationId: submitPlayerScore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [player, gameId, score]
+              properties:
+                player:
+                  type: string
+                gameId:
+                  type: string
+                score:
+                  type: integer
+                scope:
+                  type: string
+                  enum: [local, global, friends]
+                localId:
+                  type: string
+      responses:
+        '200':
+          description: Player score inserted or updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  score:
+                    $ref: '#/components/schemas/PlayerScore'
+                  previousScore:
+                    type: integer
+                    nullable: true
+                  updated:
+                    type: boolean
+                  activityCreated:
+                    type: boolean
+                  leaderboardRank:
+                    type: integer
+                    nullable: true
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '422':
+          description: Validation or rate limit error
+
+  /user-storage/{userId}/{key}:
+    put:
+      summary: Create or update a per-user key/value storage item
+      tags: [Storage]
+      operationId: putUserStorage
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  additionalProperties: true
+                meta:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: User storage item created or updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStorage'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
   /notifications:
     post:
       summary: Dispatch notification to audience
