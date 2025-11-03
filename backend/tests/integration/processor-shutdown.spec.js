@@ -1,4 +1,4 @@
-const { spawn, execSync } = require('child_process');
+const { spawn, execSync } = require('node:child_process');
 
 // This test verifies that when the server is started with ENABLE_EVENT_PROCESSOR=true
 // and receives SIGINT, it shuts down cleanly (exit code 0). It builds the project first
@@ -23,31 +23,39 @@ describe('event processor graceful shutdown', () => {
 
     let started = false;
 
+    async function insertRuleAndEvent() {
+      const { MongoClient } = require('mongodb');
+      const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017';
+      const client = new MongoClient(mongoUri, { connectTimeoutMS: 5000 });
+      try {
+        await client.connect();
+        const db = client.db('gameDB');
+        const ruleName = `test-rule-${Date.now()}`;
+        await db.collection('rules').insertOne({ name: ruleName, action: 'flag', threshold: 1, windowSeconds: 60, active: true, createdAt: new Date(), updatedAt: new Date() });
+        await db.collection('eventlogs').insertOne({ eventType: ruleName, payload: null, evaluated: false, matchedRuleIds: [], createdAt: new Date() });
+      } finally {
+        await client.close();
+      }
+    }
+
+    async function prepareAndShutdown(childProc) {
+      try {
+        await insertRuleAndEvent();
+        await new Promise((res) => setTimeout(res, 800));
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('processor test setup error', err);
+      } finally {
+        childProc.kill('SIGINT');
+      }
+    }
+
     const stdoutHandler = (chunk) => {
       const str = chunk.toString();
       if (str.includes('Backend listening on')) {
         started = true;
-        // allow server to fully initialize then insert a rule+event into MongoDB so processor picks it up,
-        // then send SIGINT after a short delay to exercise graceful shutdown while processor ran.
-        (async () => {
-          const { MongoClient } = require('mongodb');
-          const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017';
-          const client = new MongoClient(mongoUri, { connectTimeoutMS: 5000 });
-          try {
-            await client.connect();
-            const db = client.db('gameDB');
-            const ruleName = `test-rule-${Date.now()}`;
-            await db.collection('rules').insertOne({ name: ruleName, action: 'flag', threshold: 1, windowSeconds: 60, active: true, createdAt: new Date(), updatedAt: new Date() });
-            await db.collection('eventlogs').insertOne({ eventType: ruleName, payload: null, evaluated: false, matchedRuleIds: [], createdAt: new Date() });
-          } catch (err) {
-            // console.error('processor test setup error', err);
-          } finally {
-            try { await client.close(); } catch (e) {}
-          }
-
-          // give the processor a short moment to pick up the event, then send SIGINT
-          setTimeout(() => child.kill('SIGINT'), 800);
-        })();
+        // trigger background setup and eventual shutdown
+        void prepareAndShutdown(child);
       }
     };
 

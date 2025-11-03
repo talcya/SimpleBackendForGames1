@@ -34,7 +34,7 @@ jobs:
       - name: Build TypeScript
         run: pnpm -C backend exec tsc -p backend/tsconfig.json
       - name: Lint
-        run: pnpm -C backend exec eslint "backend/src/**/*.{ts,js}" || true
+        run: pnpm -C backend exec eslint "backend/src/**/*.{ts,js}" --max-warnings=0
       - name: Run tests
         env:
           MONGO_URI: mongodb://localhost:27017
