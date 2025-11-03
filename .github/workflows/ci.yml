@@ -26,7 +26,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'pnpm'
+          # runner images don't always have pnpm available when this action
+          # tries to compute the cache key; use npm cache here and install
+          # pnpm in a following step to avoid "Unable to locate pnpm" errors.
+          cache: 'npm'
       - name: Install pnpm
         run: corepack enable && pnpm -v || npm i -g pnpm
       - name: Install dependencies

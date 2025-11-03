@@ -1,5 +1,6 @@
 import express from 'express';
-import http from 'http';
+import path from 'node:path';
+import http from 'node:http';
 import { Server as IOServer } from 'socket.io';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -11,6 +12,14 @@ import mongoose from 'mongoose';
 
 import authRoutes from './routes/auth.routes';
 import playersRoutes from './routes/players.routes';
+import leaderboardsRoutes from './routes/leaderboards.routes';
+import storeRoutes from './routes/store.routes';
+import eventsRoutes from './routes/events.routes';
+import rulesRoutes from './routes/rules.routes';
+import violationsRoutes from './routes/violations.routes';
+import notificationsRoutes from './routes/notifications.routes';
+import groupsRoutes from './routes/groups.routes';
+import offersRoutes from './routes/offers.routes';
 import { startEventProcessor, stopEventProcessor } from './jobs/process-event-logs.job';
 
 export async function createServer() {
@@ -30,8 +39,22 @@ export async function createServer() {
 
   app.get('/_health', (req, res) => res.json({ ok: true }));
 
+  // Serve API docs (Redoc) during development from the OpenAPI spec.
+  // The spec is placed in `backend/public/openapi.yaml` and the Redoc HTML
+  // is available at GET /docs
+  app.use('/docs', express.static(path.join(__dirname, '../public')));
+  app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, '../public/redoc.html')));
+
   app.use('/v1/auth', authRoutes);
   app.use('/v1/players', playersRoutes);
+  app.use('/v1/leaderboards', leaderboardsRoutes);
+  app.use('/v1/store', storeRoutes);
+  app.use('/v1/events', eventsRoutes);
+  app.use('/v1/rules', rulesRoutes);
+  app.use('/v1/violations', violationsRoutes);
+  app.use('/v1/notifications', notificationsRoutes);
+  app.use('/v1/groups', groupsRoutes);
+  app.use('/v1/offers', offersRoutes);
 
   app.use(errorHandler);
 

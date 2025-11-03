@@ -9,6 +9,10 @@ Environment
 - FRONTEND_URL - frontend origin for CORS (default: http://localhost:3000)
 - ENABLE_EVENT_PROCESSOR - set to `true` to start the background EventLog processor (default: false)
 
+API Documentation
+- Redoc is available during development. The OpenAPI contract lives in `specs/001-plan-game-stack/contracts/openapi.yaml` and a copy is served from the running backend at `/docs/openapi.yaml`.
+- Visit `http://localhost:8000/docs` (or the value of `PORT`) to view interactive API docs powered by Redoc.
+
 Run locally (dev):
 
 - Install deps: `npm install`
