@@ -2,6 +2,7 @@ import express from 'express';
 import OfferModel from '../models/offer';
 import UserModel from '../models/user';
 import { requireAuth } from '../middleware/auth';
+import { requireOwnerBody } from '../middleware/ownership';
 
 const router = express.Router();
 
@@ -22,14 +23,11 @@ router.get('/active', async (req, res, next) => {
   }
 });
 
-// POST /v1/offers/redeem (protected)
-router.post('/redeem', requireAuth, async (req, res, next) => {
+// POST /v1/offers/redeem (protected - owner)
+router.post('/redeem', requireAuth, requireOwnerBody('userId'), async (req, res, next) => {
   try {
     const { userId, code } = req.body;
     if (!userId || !code) return res.status(400).json({ message: 'missing userId or code' });
-    // ensure caller matches userId
-    // @ts-ignore
-    if (req.user?.id !== userId) return res.status(403).json({ message: 'forbidden' });
     const offer = await OfferModel.findOne({ code, isActive: true }).exec();
     if (!offer) return res.status(404).json({ message: 'offer not found' });
     const now = new Date();

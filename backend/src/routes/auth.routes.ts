@@ -12,8 +12,8 @@ const router = express.Router();
 
 router.post('/signup', async (req, res, next) => {
   try {
-    const { email, displayName, password } = req.body;
-    const { user, accessToken, refreshToken } = await signup(email, displayName, password);
+    const { email, displayName, password, guestId } = req.body;
+    const { user, accessToken, refreshToken } = await signup(email, displayName, password, guestId);
     res.json({ user: { id: user._id, displayName: user.displayName, email: user.email }, accessToken, refreshToken });
   } catch (err) {
     next(err);

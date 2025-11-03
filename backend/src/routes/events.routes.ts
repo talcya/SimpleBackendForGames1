@@ -4,23 +4,37 @@ import UserModel from '../models/user';
 import RuleModel from '../models/rule';
 import ViolationModel from '../models/violation';
 import { requireAuth } from '../middleware/auth';
+import { optionalAuthOrGuest } from '../middleware/guest';
+import { requireOwnerBody, requireOwnerParam } from '../middleware/ownership';
 
 const router = express.Router();
 
-// POST /v1/events (protected)
-router.post('/', requireAuth, async (req, res, next) => {
+// POST /v1/events (accepts authenticated user OR a guest via X-Guest-Id)
+router.post('/', optionalAuthOrGuest, async (req, res, next) => {
   try {
-    const { playerId, eventType, payload, gameMode } = req.body;
-    if (!playerId || !eventType) return res.status(400).json({ message: 'missing playerId or eventType' });
-    // ensure caller matches playerId
-    // @ts-ignore
-    if (req.user?.id !== playerId) return res.status(403).json({ message: 'forbidden' });
-    const ev = new EventLogModel({ playerId, eventType, payload });
+    const { playerId, sessionId: bodySessionId, eventType, payload, gameMode } = req.body;
+    const headerGuestId = (req.headers['x-guest-id'] as string) || undefined;
+
+    // require either a playerId (authenticated) or a sessionId (guest)
+    if (!playerId && !bodySessionId && !headerGuestId) return res.status(400).json({ message: 'missing playerId or sessionId' });
+
+    // If playerId is provided, ensure caller matches playerId
+    if (playerId) {
+      if (!req.user || (req.user as any).id !== playerId) return res.status(403).json({ message: 'forbidden' });
+    }
+
+    const finalSessionId = bodySessionId || headerGuestId || undefined;
+
+    const evData: any = { eventType, payload };
+    if (playerId) evData.playerId = playerId;
+    if (!playerId && finalSessionId) evData.sessionId = finalSessionId;
+
+    const ev = new EventLogModel(evData);
     await ev.save();
 
-    // Auto-update high score if payload contains score
+    // Auto-update high score if payload contains score (only for authenticated users)
     const score = payload && (payload as any).score;
-    if (typeof score === 'number') {
+    if (typeof score === 'number' && playerId) {
       const user = await UserModel.findById(playerId);
       if (user && score > (user.highScore || 0)) {
         user.highScore = score;
@@ -28,8 +42,8 @@ router.post('/', requireAuth, async (req, res, next) => {
       }
     }
 
-    // Minimal synchronous rule check for snapshots (kept small)
-    if (gameMode && eventType === 'snapshot') {
+    // Minimal synchronous rule check for snapshots (kept small) - only for users
+    if (gameMode && eventType === 'snapshot' && playerId) {
       const rule = await RuleModel.findOne({ name: gameMode, active: true }).exec();
       if (rule) {
         const vValue = payload && ((payload as any).value ?? (payload as any).speed);
@@ -54,12 +68,9 @@ router.post('/', requireAuth, async (req, res, next) => {
 });
 
 // GET /v1/events/user/:userId (protected - owner)
-router.get('/user/:userId', requireAuth, async (req, res, next) => {
+router.get('/user/:userId', requireAuth, requireOwnerParam('userId'), async (req, res, next) => {
   try {
     const { userId } = req.params;
-    // only allow owner to fetch their events
-    // @ts-ignore
-    if (req.user?.id !== userId) return res.status(403).json({ message: 'forbidden' });
     const limit = Math.min(Number(req.query.limit) || 50, 500);
     const rows = await EventLogModel.find({ playerId: userId }).sort({ createdAt: -1 }).limit(limit).lean();
     res.json({ events: rows });

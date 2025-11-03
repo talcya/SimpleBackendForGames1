@@ -2,6 +2,7 @@ import express from 'express';
 import UserModel from '../models/user';
 import LeaderboardModel from '../models/leaderboard';
 import { requireAuth } from '../middleware/auth';
+import { requireOwnerParam } from '../middleware/ownership';
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.get('/global', async (req, res, next) => {
 });
 
 // GET /v1/leaderboards/friends/:userId (protected - owner)
-router.get('/friends/:userId', requireAuth, async (req, res, next) => {
+router.get('/friends/:userId', requireAuth, requireOwnerParam('userId'), async (req, res, next) => {
   try {
     const { userId } = req.params;
     const user = await UserModel.findById(userId).populate('friends', 'displayName highScore avatarUrl');

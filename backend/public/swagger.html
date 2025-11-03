@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>API Docs — Swagger UI (Try it)</title>
+    <link rel="stylesheet" href="/docs/vendor/swagger-ui-dist/swagger-ui.css" />
+  </head>
+  <body>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid #eee">
+      <div>
+        <label for="dev-token">Dev Bearer Token:</label>
+        <input id="dev-token" style="width:360px;margin-left:8px" placeholder="paste token or use 'Get dev token'" />
+        <button id="save-token" style="margin-left:8px">Save</button>
+        <button id="clear-token" style="margin-left:6px">Clear</button>
+      </div>
+      <div>
+        <a href="/docs/openapi.yaml" download>Download OpenAPI</a>
+      </div>
+    </div>
+
+    <div id="swagger-ui"></div>
+  <div id="swagger-debug" style="padding:12px 24px;border-top:1px solid #eee;color:#444;font-family:monospace;white-space:pre-wrap"></div>
+
+    <script src="/docs/vendor/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <!-- js-yaml used to parse YAML OpenAPI into a JS object before passing to Swagger UI -->
+    <script src="/docs/vendor/js-yaml/js-yaml.min.js"></script>
+    <script src="/docs/swagger-init.js"></script>
+  </body>
+</html>

@@ -7,6 +7,9 @@ declare module 'express-serve-static-core' {
       v?: number;
       [key: string]: unknown;
     };
+    guest?: {
+      guestId?: string;
+    };
   }
 }
 

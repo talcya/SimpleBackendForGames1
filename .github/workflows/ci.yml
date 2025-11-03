@@ -7,6 +7,57 @@ on:
     branches: [ main ]
 
 jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install backend dev deps (ensure Redocly CLI available)
+        run: pnpm -C backend install --frozen-lockfile
+
+      - name: Build backend (TS)
+        run: pnpm -C backend run build
+
+      - name: Run backend tests
+        run: pnpm -C backend test
+
+      - name: Bundle API docs
+        if: always()
+        run: pnpm -C backend run redoc:bundle
+
+      - name: Upload Redoc bundle as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redoc-bundle
+          path: backend/public/redoc-bundled.html
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
   backend:
     name: backend
     runs-on: ubuntu-latest

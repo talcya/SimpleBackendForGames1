@@ -7,7 +7,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-  "types": ["node", "express", "passport"],
+  "types": ["node", "express", "passport", "jest"],
     "outDir": "dist",
     "noEmitOnError": true
   },

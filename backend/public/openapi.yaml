@@ -2,9 +2,12 @@ openapi: 3.1.0
 info:
   title: Minimal Cross-Platform Game Backend API
   version: 0.1.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
   description: REST contracts for authentication, leaderboards, store, events, notifications, groups, offers, analytics, and daily challenges.
 servers:
-  - url: https://api.example.com/v1
+  - url: https://api.simplegames.local/v1
 security:
   - bearerAuth: []
 paths:
@@ -12,6 +15,7 @@ paths:
     post:
       summary: Create a new player with email/password credentials
       tags: [Auth]
+      operationId: signupUser
       requestBody:
         required: true
         content:
@@ -25,12 +29,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
         '409':
           description: Email already in use
   /auth/login:
     post:
       summary: Authenticate via email/password
       tags: [Auth]
+      operationId: loginUser
       requestBody:
         required: true
         content:
@@ -50,13 +57,21 @@ paths:
     get:
       summary: Begin Google OAuth flow
       tags: [Auth]
+      operationId: googleOAuth
       responses:
+        '200':
+          description: OK
         '302':
           description: Redirect to Google
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
   /players/me:
     get:
       summary: Retrieve authenticated player profile
       tags: [Players]
+      operationId: getCurrentPlayer
       responses:
         '200':
           description: Player profile
@@ -64,10 +79,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlayerProfile'
+        '401':
+          description: Unauthorized
   /players/{playerId}/high-score:
     put:
       summary: Update high score if greater than stored value
       tags: [Players]
+      operationId: updatePlayerHighScore
       parameters:
         - $ref: '#/components/parameters/PlayerId'
       requestBody:
@@ -85,10 +103,15 @@ paths:
                 $ref: '#/components/schemas/PlayerProfile'
         '409':
           description: Score rejected because it does not beat current high score
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
   /leaderboards/{scope}:
     get:
       summary: Fetch leaderboard entries for selected scope
       tags: [Leaderboards]
+      operationId: getLeaderboard
       parameters:
         - $ref: '#/components/parameters/LeaderboardScope'
         - $ref: '#/components/parameters/Region'
@@ -101,6 +124,10 @@ paths:
       responses:
         '200':
           description: Leaderboard entries
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -109,6 +136,9 @@ paths:
     post:
       summary: Submit gameplay event or snapshot
       tags: [Events]
+      operationId: submitEvent
+      parameters:
+        - $ref: '#/components/parameters/X-Guest-Id'
       requestBody:
         required: true
         content:
@@ -120,10 +150,55 @@ paths:
           description: Event accepted for processing
         '422':
           description: Payload invalid or exceeds limits
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /guests:
+    post:
+      summary: Create a new guest session
+      tags: [Guests]
+      operationId: createGuest
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestCreate'
+      responses:
+        '201':
+          description: Guest created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Guest'
+
+  /guests/{guestId}:
+    get:
+      summary: Retrieve guest session by guestId
+      tags: [Guests]
+      operationId: getGuest
+      parameters:
+        - $ref: '#/components/parameters/GuestId'
+      responses:
+        '200':
+          description: Guest record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Guest'
+        '404':
+          description: Guest not found
+        '401':
+          description: Unauthorized
   /notifications:
     post:
       summary: Dispatch notification to audience
       tags: [Notifications]
+      operationId: createNotification
       requestBody:
         required: true
         content:
@@ -133,9 +208,14 @@ paths:
       responses:
         '202':
           description: Notification scheduled
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
     get:
       summary: List notifications for current player
       tags: [Notifications]
+      operationId: listNotifications
       parameters:
         - name: unreadOnly
           in: query
@@ -154,10 +234,13 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized
   /offers:
     post:
       summary: Create or schedule an offer
       tags: [Offers]
+      operationId: createOffer
       requestBody:
         required: true
         content:
@@ -171,12 +254,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Offer'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
     get:
       summary: List active offers for player
       tags: [Offers]
+      operationId: listOffers
       responses:
         '200':
           description: Active offers
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -190,6 +280,7 @@ paths:
     post:
       summary: Create player group
       tags: [Groups]
+      operationId: createGroup
       requestBody:
         required: true
         content:
@@ -199,6 +290,10 @@ paths:
       responses:
         '201':
           description: Group created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -207,6 +302,7 @@ paths:
     get:
       summary: Query aggregated analytics metrics
       tags: [Analytics]
+      operationId: getAnalytics
       parameters:
         - name: metric
           in: query
@@ -226,6 +322,8 @@ paths:
       responses:
         '200':
           description: Analytics series
+        '400':
+          description: Bad request
           content:
             application/json:
               schema:
@@ -234,6 +332,7 @@ paths:
     get:
       summary: Fetch current daily challenge
       tags: [Challenges]
+      operationId: getDailyChallenge
       responses:
         '200':
           description: Active challenge
@@ -243,6 +342,211 @@ paths:
                 $ref: '#/components/schemas/DailyChallenge'
         '204':
           description: No challenge available
+        '401':
+          description: Unauthorized
+  /store/items:
+    get:
+      summary: List active store items
+      tags: [Store]
+      operationId: listStoreItems
+      responses:
+        '200':
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StoreItem'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /store/purchase:
+    post:
+      summary: Purchase an item (protected)
+      tags: [Store]
+      operationId: purchaseStoreItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, itemId]
+              properties:
+                userId:
+                  type: string
+                itemId:
+                  type: string
+      responses:
+        '200':
+          description: Purchase successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  item:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+        '400':
+          description: Bad request (missing parameters)
+        '401':
+          description: Unauthorized
+
+  /player-scores:
+    get:
+      summary: Query player scores (leaderboard entries)
+      tags: [Leaderboards]
+      operationId: queryPlayerScores
+      parameters:
+        - name: gameId
+          in: query
+          schema:
+            type: string
+        - name: scope
+          in: query
+          schema:
+            type: string
+            enum: [local, global, friends]
+        - name: localId
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Player scores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PlayerScore'
+        '400':
+          description: Bad request
+
+    post:
+      summary: Upsert a player score
+      tags: [Leaderboards]
+      operationId: upsertPlayerScore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [player, gameId, score]
+              properties:
+                player:
+                  type: string
+                gameId:
+                  type: string
+                score:
+                  type: number
+                scope:
+                  type: string
+                  enum: [local, global, friends]
+                localId:
+                  type: string
+      responses:
+        '200':
+          description: PlayerScore upsert result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerScore'
+        '400':
+          description: Invalid score payload
+        '401':
+          description: Unauthorized
+
+  /user-storage/{userId}/{key}:
+    get:
+      summary: Retrieve a user-storage entry by user + key
+      tags: [UserStorage]
+      operationId: getUserStorageEntry
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: UserStorage entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStorage'
+        '404':
+          description: Not found
+        '401':
+          description: Unauthorized
+
+    put:
+      summary: Create or update a user-storage entry
+      tags: [UserStorage]
+      operationId: putUserStorageEntry
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  additionalProperties: true
+                meta:
+                  type: object
+      responses:
+        '200':
+          description: Saved entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStorage'
+        '400':
+          description: Invalid payload
+        '401':
+          description: Unauthorized
+
+    # daily challenge path moved earlier; duplicate removed
 components:
   securitySchemes:
     bearerAuth:
@@ -257,6 +561,13 @@ components:
       schema:
         type: string
         pattern: '^[a-fA-F0-9]{24}$'
+    GuestId:
+      name: guestId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique guest session identifier (UUID)
     LeaderboardScope:
       name: scope
       in: path
@@ -272,6 +583,14 @@ components:
         minLength: 2
         maxLength: 2
         description: ISO country code required for local leaderboards
+    X-Guest-Id:
+      name: X-Guest-Id
+      in: header
+      required: false
+      description: Optional guest session id header for unauthenticated requests
+      schema:
+        type: string
+        format: uuid
   schemas:
     SignupRequest:
       type: object
@@ -287,6 +606,9 @@ components:
         password:
           type: string
           minLength: 10
+        guestId:
+          type: string
+          description: Optional guest session id to migrate on signup
     LoginRequest:
       type: object
       required: [email, password]
@@ -393,3 +715,249 @@ components:
           format: date-time
         idempotencyKey:
           type: string
+    # Notification schema replaced later with target/payload/readBy shape
+    NotificationCreate:
+      type: object
+      required: [title, body]
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        targets:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+        sendAt:
+          type: string
+          format: date-time
+    OfferCreate:
+      type: object
+      required: [name, code]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+        maxUses:
+          type: integer
+    Offer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+        maxUses:
+          type: integer
+        usedBy:
+          type: array
+          items:
+            type: string
+    GroupCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        members:
+          type: array
+          items:
+            type: string
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        members:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+    AnalyticsResponse:
+      type: object
+      properties:
+        metric:
+          type: string
+        series:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              value:
+                type: number
+    DailyChallenge:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+    # Removed unused components to reduce linter warnings. Re-add if referenced by server routes.
+    Guest:
+      type: object
+      properties:
+        id:
+          type: string
+        guestId:
+          type: string
+        highScore:
+          type: integer
+        inventory:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryItem'
+        lastActive:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+    GuestCreate:
+      type: object
+      properties:
+        guestId:
+          type: string
+        inventory:
+          type: array
+          items:
+            type: string
+    StoreItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        howGotIt:
+          type: string
+          enum: [won, purchased, promo, giveaway]
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    PlayerScore:
+      type: object
+      properties:
+        id:
+          type: string
+        player:
+          type: string
+        gameId:
+          type: string
+        score:
+          type: number
+        scope:
+          type: string
+          enum: [local, global, friends]
+        localId:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        level:
+          type: string
+          enum: [info, promo, critical]
+        target:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [all, group, user]
+            group:
+              type: string
+            user:
+              type: string
+        payload:
+          type: object
+          additionalProperties: true
+        readBy:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+    UserStorage:
+      type: object
+      properties:
+        id:
+          type: string
+        user:
+          type: string
+        key:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          properties:
+            version:
+              type: number
+            tags:
+              type: array
+              items:
+                type: string
+            lastUpdatedBy:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

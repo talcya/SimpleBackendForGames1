@@ -56,14 +56,21 @@ export async function evaluateEventLog(eventLogId: string) {
     }
   }
 
-  event.evaluated = true;
+  // Persist evaluation result using an update operation to avoid triggering
+  // document pre-validation (which enforces playerId/sessionId) during save.
+  const update: any = { evaluated: true };
   if (matchedRuleIds.length) {
-    event.matchedRuleIds = matchedRuleIds;
-    event.evaluationResult = { matched: matchedRuleIds.map((id) => id.toHexString()) };
+    update.matchedRuleIds = matchedRuleIds;
+    update.evaluationResult = { matched: matchedRuleIds.map((id) => id.toHexString()) };
+  } else {
+    update.matchedRuleIds = [];
+    update.evaluationResult = null;
   }
-  await event.save();
 
-  return event;
+  await EventLogModel.updateOne({ _id: event._id }, { $set: update }).exec();
+
+  // return the fresh document for callers that need it
+  return await EventLogModel.findById(event._id).exec();
 }
 
 /**

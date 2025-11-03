@@ -16,3 +16,14 @@ exports.connectMongo = async function connectMongo() {
   await mongoose.connect(exports.config.mongoUri, { dbName: 'gameDB' });
   return mongoose.connection;
 };
+
+// Runtime-evaluated flags helper for environments that import the JS shim.
+function getRuntimeFlags() {
+  const dev = (process.env.DEV_MODE === 'true') || process.env.NODE_ENV === 'development';
+  const enableDocs = process.env.ENABLE_DOCS ? process.env.ENABLE_DOCS === 'true' : dev;
+  const enableDevRoutes = process.env.ENABLE_DEV_ROUTES ? process.env.ENABLE_DEV_ROUTES === 'true' : dev;
+  const enableEventProcessor = process.env.ENABLE_EVENT_PROCESSOR ? process.env.ENABLE_EVENT_PROCESSOR === 'true' : dev;
+  return { dev, enableDocs, enableDevRoutes, enableEventProcessor };
+}
+
+exports.getRuntimeFlags = getRuntimeFlags;

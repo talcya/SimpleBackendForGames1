@@ -1,6 +1,7 @@
 import express from 'express';
 import RuleModel from '../models/rule';
 import { requireAuth } from '../middleware/auth';
+import { requireRole } from '../middleware/roles';
 
 const router = express.Router();
 
@@ -14,8 +15,8 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// POST /v1/rules (protected)
-router.post('/', requireAuth, async (req, res, next) => {
+// POST /v1/rules (protected - moderator+)
+router.post('/', requireAuth, requireRole('moderator'), async (req, res, next) => {
   try {
     const payload = req.body;
     const rule = await RuleModel.create(payload);
